@@ -1,3 +1,4 @@
+#include <math.h>
 #include "cache.h"
 #include "trace.h"
 
@@ -34,6 +35,7 @@ int main(int argc, char* argv[])
 	uint32_t size = 32; //total size of L1$ (KB)
 	uint32_t ways = 1; //# of ways in L1. Default to direct-mapped
 	uint32_t line = 32; //line size (B)
+    
 
   // hit and miss counts
   int totalHits = 0;
@@ -47,7 +49,7 @@ int main(int argc, char* argv[])
 	const char waysString[] = "-w";
 	const char lineString[] = "-l";
 	const char traceString[] = "-t";
-  const char lruString[] = "-lru";
+    const char lruString[] = "-lru";
 	
   if (argc == 1) {
     // No arguments passed, show help
@@ -58,11 +60,12 @@ int main(int argc, char* argv[])
 	//parse command line
 	for(i = 1; i < argc; i++)
 	{
+        
 		//check for help
 		if(!strcmp(helpString, argv[i]))
 		{
 			//print out help text and terminate
-      printHelp(argv[0]);
+            printHelp(argv[0]);
 			return 1; //return 1 for help termination
 		}
 		//check for size
@@ -113,25 +116,44 @@ int main(int argc, char* argv[])
 				return -1; //input failure
 			}
 		}
-    else if (!strcmp(traceString, argv[i])) {
-      filename = argv[++i];
-    }
-    else if (!strcmp(lruString, argv[i])) {
-      // Extra Credit: Implement Me!
+        else if (!strcmp(traceString, argv[i])) {
+            filename = argv[++i];
+        }
+        else if (!strcmp(lruString, argv[i])) {
+            // Extra Credit: Implement Me!
 			printf("Unrecognized argument. Exiting.\n");
 			return -1;
-    }
+        }
 		//unrecognized input
 		else{
 			printf("Unrecognized argument. Exiting.\n");
 			return -1;
 		}
-	}
+        
+	} //end for
 	
+    
+    
+    //calculate variables
+    uint32_t sets = (size * 1024) / (line * ways);
+    uint32_t bitsOffset = 0;
+    uint32_t bitIndex = 0;
+    
+    uint32_t copyLine = line;
+    uint32_t copySets = sets;
+    while (copyLine >>= 1) {
+        bitsOffset++;
+    }
+    while (copySets >>= 1) {
+        bitIndex++;
+    }
+    uint32_t bitsTag = 32 - (bitIndex + bitsOffset);
+    
+    
   /* TODO: Probably should intitalize the cache */
 
-  printf("Ways: %u; Sets: %u; Line Size: %uB\n", 0, 0, 0/* FIXME */);
-  printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", 0, 0, 0/* FIXME */);
+  printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
+  printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitIndex, bitsOffset);
 
 	/* TODO: Now we read the trace file line by line */
   
