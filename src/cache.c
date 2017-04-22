@@ -151,9 +151,30 @@ int main(int argc, char* argv[])
     
     
   /* TODO: Probably should intitalize the cache */
+    //init array stuff
+    int **validArray = calloc(sets, sizeof(int *) * sets);
+    int **tagArray = calloc(sets, sizeof(int *) * sets);
+    int **dirtyArray = calloc(sets, sizeof(int *) * sets);
+    
+    initArray(validArray, ways);
+    initArray(tagArray, ways);
+    initArray(dirtyArray, ways);
 
-  printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
-  printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitIndex, bitsOffset);
+//Used to test if init worked
+//    i=0;
+//    int j=0;
+//    int count = 0;
+//    
+//    for(i=0; i<sets; i++)
+//        for(j=0;j<ways; j++)
+//            validArray[i][j] = ++count;
+//    
+//    for(i=0; i< sets; i++)
+//        for(j=0;j<ways; j++)
+//            printf("array[%i][%i] = %d\n ", i, j, validArray[i][j]);
+    
+    printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
+    printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitIndex, bitsOffset);
 
 	/* TODO: Now we read the trace file line by line */
   
@@ -167,4 +188,12 @@ int main(int argc, char* argv[])
   /* TODO: Now we output the file */
 
   /* TODO: Cleanup */
+}
+
+void initArray(int **array, uint32_t ways) {
+    int j = 0;
+    
+    for(j=0; j<ways; j++) {
+        array[j] = calloc(ways, sizeof(int) * ways);
+    }
 }
