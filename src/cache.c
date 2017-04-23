@@ -2,6 +2,7 @@
 #include "cache.h"
 #include "trace.h"
 
+
 int write_xactions = 0;
 int read_xactions = 0;
 
@@ -35,8 +36,16 @@ int main(int argc, char* argv[])
 	uint32_t size = 32; //total size of L1$ (KB)
 	uint32_t ways = 1; //# of ways in L1. Default to direct-mapped
 	uint32_t line = 32; //line size (B)
-    
+    uint32_t numLines = 0;
 
+
+  //for FileInput Output formats
+    FILE *fp, *wp;
+    char c; //store character and read from file - for counting numLines
+    char storeLoad[1];
+    uint32_t effectiveAddr;
+    char writeFileName[200];
+    
   // hit and miss counts
   int totalHits = 0;
   int totalMisses = 0;
@@ -176,8 +185,48 @@ int main(int argc, char* argv[])
     printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
     printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitIndex, bitsOffset);
 
-	/* TODO: Now we read the trace file line by line */
-  
+    printf("Testing123\n");
+    
+    /* TODO: Now we read the trace file line by line */
+
+    //get writeFileName
+    sprintf(writeFileName, "%s.simulated", filename);
+//    printf("Value of writeFileName: %s\n", writeFileName);
+    
+    fp = fopen(filename, "r");
+    wp = fopen(writeFileName, "a"); //file to write, append only
+
+    if (fp == NULL) {
+        printf("Couldn't open file %s\n", filename);
+        return 0;
+    }
+    
+    
+    //Extract number of lines in file
+    for(c = getc(fp); c != EOF; c = getc(fp)) {
+        //keep track of the number of lines
+        if(c == '\n') {
+            numLines++;
+        }
+    }
+    printf("File %s has %d lines\n", filename, numLines);
+
+    
+    //rewind to top
+    rewind(fp);
+    
+    for(i=0; i<numLines; i++) {
+        fscanf(fp, "%s %x", storeLoad, &effectiveAddr);
+        printf("%s, %i\n", storeLoad, effectiveAddr);
+        
+        //testing writing to file
+//        fprintf(wp, "%s 0x%x hit\n", storeLoad, effectiveAddr);
+        
+    }
+    
+    fclose(fp);
+
+    
   /* TODO: Now we simulate the cache */  
 
   /* Print results */
