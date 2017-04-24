@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
   //for FileInput Output formats
     FILE *fp, *wp;
     char c; //store character and read from file - for counting numLines
-    char storeLoad[1];
+    char storeLoad;
     uint32_t effectiveAddr;
     char writeFileName[200];
     
@@ -217,16 +217,15 @@ int main(int argc, char* argv[])
     //rewind to top
     rewind(fp);
     
-    
     for(i=0; i<numLines; i++) {
-        fscanf(fp, "%s %x", storeLoad, &effectiveAddr);
-        printf("%s, %x\n", storeLoad, effectiveAddr);
+        fscanf(fp, "%c %x\n", &storeLoad, &effectiveAddr);
+        printf("%c, %x\n", storeLoad, effectiveAddr);
         
         indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
 
         
         //testing writing to file
-        fprintf(wp, "%s 0x%.8x hit\n", storeLoad, effectiveAddr);
+        fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
         
     }
     
