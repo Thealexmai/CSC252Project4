@@ -37,7 +37,8 @@ int main(int argc, char* argv[])
 	uint32_t ways = 1; //# of ways in L1. Default to direct-mapped
 	uint32_t line = 32; //line size (B)
     uint32_t numLines = 0;
-
+    uint32_t indexValue;
+    uint32_t tagValue;
 
   //for FileInput Output formats
     FILE *fp, *wp;
@@ -146,7 +147,7 @@ int main(int argc, char* argv[])
     //calculate variables
     uint32_t sets = (size * 1024) / (line * ways);
     uint32_t bitsOffset = 0;
-    uint32_t bitIndex = 0;
+    uint32_t bitsIndex = 0;
     
     uint32_t copyLine = line;
     uint32_t copySets = sets;
@@ -154,20 +155,21 @@ int main(int argc, char* argv[])
         bitsOffset++;
     }
     while (copySets >>= 1) {
-        bitIndex++;
+        bitsIndex++;
     }
-    uint32_t bitsTag = 32 - (bitIndex + bitsOffset);
+    uint32_t bitsTag = 32 - (bitsIndex + bitsOffset);
     
     
   /* TODO: Probably should intitalize the cache */
     //init array stuff
+    //calloc(n length, size)
     int **validArray = calloc(sets, sizeof(int *) * sets);
     int **tagArray = calloc(sets, sizeof(int *) * sets);
     int **dirtyArray = calloc(sets, sizeof(int *) * sets);
     
-    initArray(validArray, ways);
-    initArray(tagArray, ways);
-    initArray(dirtyArray, ways);
+    initArray(validArray, sets, ways);
+    initArray(tagArray, sets, ways);
+    initArray(dirtyArray, sets, ways);
 
 //Used to test if init worked
 //    i=0;
@@ -183,7 +185,7 @@ int main(int argc, char* argv[])
 //            printf("array[%i][%i] = %d\n ", i, j, validArray[i][j]);
     
     printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
-    printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitIndex, bitsOffset);
+    printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitsIndex, bitsOffset);
 
     printf("Testing123\n");
     
@@ -194,7 +196,7 @@ int main(int argc, char* argv[])
 //    printf("Value of writeFileName: %s\n", writeFileName);
     
     fp = fopen(filename, "r");
-    wp = fopen(writeFileName, "a"); //file to write, append only
+    wp = fopen(writeFileName, "w"); //file to write, write file
 
     if (fp == NULL) {
         printf("Couldn't open file %s\n", filename);
@@ -215,16 +217,22 @@ int main(int argc, char* argv[])
     //rewind to top
     rewind(fp);
     
+    
     for(i=0; i<numLines; i++) {
         fscanf(fp, "%s %x", storeLoad, &effectiveAddr);
-        printf("%s, %i\n", storeLoad, effectiveAddr);
+        printf("%s, %x\n", storeLoad, effectiveAddr);
+        
+        indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
+
         
         //testing writing to file
-//        fprintf(wp, "%s 0x%x hit\n", storeLoad, effectiveAddr);
+        fprintf(wp, "%s 0x%.8x hit\n", storeLoad, effectiveAddr);
         
     }
     
+    //close the files writing
     fclose(fp);
+    fclose(wp);
 
     
   /* TODO: Now we simulate the cache */  
@@ -239,10 +247,27 @@ int main(int argc, char* argv[])
   /* TODO: Cleanup */
 }
 
-void initArray(int **array, uint32_t ways) {
+void initArray(int **array, uint32_t sets, uint32_t ways) {
     int j = 0;
     
-    for(j=0; j<ways; j++) {
+    for(j=0; j<sets; j++) {
         array[j] = calloc(ways, sizeof(int) * ways);
     }
 }
+
+uint32_t getIndexValue(uint32_t effectiveAddr, uint32_t bitsTag, uint32_t bitsIndex, uint32_t bitsOffset) {
+    
+    if((bitsOffset + bitsTag) == 32) {
+        return 0;
+    } else {
+        uint32_t value = effectiveAddr;
+        value <<= bitsTag;
+        value >>= (bitsTag + bitsOffset);
+        
+        return value;
+
+    }
+}
+
+
+
