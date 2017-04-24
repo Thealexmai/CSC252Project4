@@ -32,7 +32,7 @@ void printHelp(const char * prog) {
 */
 int main(int argc, char* argv[])
 {
-	int i;
+	int i,j;
 	uint32_t size = 32; //total size of L1$ (KB)
 	uint32_t ways = 1; //# of ways in L1. Default to direct-mapped
 	uint32_t line = 32; //line size (B)
@@ -187,13 +187,12 @@ int main(int argc, char* argv[])
     printf("Ways: %u; Sets: %u; Line Size: %uB\n", ways, sets, line);
     printf("Tag: %d bits; Index: %d bits; Offset: %d bits\n", bitsTag, bitsIndex, bitsOffset);
 
-    printf("Testing123\n");
     
-    /* TODO: Now we read the trace file line by line */
+/* TODO: Now we read the trace file line by line */
 
     //get writeFileName
     sprintf(writeFileName, "%s.simulated", filename);
-//    printf("Value of writeFileName: %s\n", writeFileName);
+    //printf("Value of writeFileName: %s\n", writeFileName);
     
     fp = fopen(filename, "r");
     wp = fopen(writeFileName, "w"); //file to write, write file
@@ -217,24 +216,34 @@ int main(int argc, char* argv[])
     //rewind to top
     rewind(fp);
     
-    for(i=0; i<numLines; i++) {
-        fscanf(fp, "%c %x\n", &storeLoad, &effectiveAddr);
-        printf("%c, %x\n", storeLoad, effectiveAddr);
-        
-        indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
+    //Test values of tag[]
+    //printArray(tagArray, sets, ways);
 
+    
+/* TODO: Now we simulate the cache */
+    
+    
+    for(i=0; i<numLines; i++) {
+        
+        fscanf(fp, "%c ", &storeLoad);
+        fscanf(fp, "%x\n", &effectiveAddr);
+        //printf("%i. %c, %x\n", i+1, storeLoad, effectiveAddr);
+        
+        //get index and tag values
+        indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
+        tagValue = getTagValue(effectiveAddr, bitsTag);
+//        printf("%i tagValue = %i\n", i+1, tagValue);
         
         //testing writing to file
-        fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
+        fprintf(wp, "%c 0x%.8x\n", storeLoad, effectiveAddr);
         
-    }
+        
+        
+    } //end for
     
     //close the files writing
     fclose(fp);
     fclose(wp);
-
-    
-  /* TODO: Now we simulate the cache */  
 
   /* Print results */
   printf("Miss Rate: %8lf%%\n", ((double) totalMisses) / ((double) totalMisses + (double) totalHits) * 100.0);
@@ -247,8 +256,7 @@ int main(int argc, char* argv[])
 }
 
 void initArray(int **array, uint32_t sets, uint32_t ways) {
-    int j = 0;
-    
+    int j;
     for(j=0; j<sets; j++) {
         array[j] = calloc(ways, sizeof(int) * ways);
     }
@@ -268,5 +276,19 @@ uint32_t getIndexValue(uint32_t effectiveAddr, uint32_t bitsTag, uint32_t bitsIn
     }
 }
 
+uint32_t getTagValue(uint32_t effectiveAddr, uint32_t bitsTag) {
+    uint32_t shiftamount = 32-bitsTag;
+    uint32_t value1 = effectiveAddr;
+    value1 >>= (32-bitsTag);
+
+    return value1;
+}
+
+void printArray(int ** array, uint32_t sets, uint32_t ways) {
+    int i,j;
+    for(i=0; i< sets; i++)
+        for(j=0;j<ways; j++)
+            printf("ArrayName[%i][%i] = %d\n ", i, j, array[i][j]);
+}
 
 
