@@ -2,8 +2,11 @@
 #include "cache.h"
 #include "trace.h"
 
+typedef enum {
+    HIT, COMPULSORY, CONFLICT, CAPACITY
+}fullyMiss_t;
 
-int write_xactions = 0;
+int write_xactions = 0; //for that's write-back policy
 int read_xactions = 0;
 
 /*
@@ -32,13 +35,17 @@ void printHelp(const char * prog) {
 */
 int main(int argc, char* argv[])
 {
-	int i,j;
+	int i,j, column;
 	uint32_t size = 32; //total size of L1$ (KB)
 	uint32_t ways = 1; //# of ways in L1. Default to direct-mapped
 	uint32_t line = 32; //line size (B)
     uint32_t numLines = 0;
     uint32_t indexValue;
     uint32_t tagValue;
+    fullyMiss_t toReal;
+    uint32_t fullyTagValue;
+    boolean fullyDuplicate;
+    
 
   //for FileInput Output formats
     FILE *fp, *wp;
@@ -46,6 +53,7 @@ int main(int argc, char* argv[])
     char storeLoad;
     uint32_t effectiveAddr;
     char writeFileName[200];
+    uint32_t * traceAddress;
     
   // hit and miss counts
   int totalHits = 0;
@@ -170,10 +178,25 @@ int main(int argc, char* argv[])
     initArray(validArray, sets, ways);
     initArray(tagArray, sets, ways);
     initArray(dirtyArray, sets, ways);
+    
+    //keeping tack of addresses - tag and index to see if we accessed it before
+    int **addressTrack = calloc(sets, sizeof(int *) * sets);
+    initArray(addressTrack, sets, ways);
+    
+    //fullyAssocArrays are only one row and #columns
+    int **fullyAssocValidArray = calloc(1, sizeof(int *));
+    initArray(fullyAssocValidArray, 1, sets*ways);
+    int **fullyAssocDirtyArray = calloc(1, sizeof(int *));
+    initArray(fullyAssocDirtyArray, 1, sets*ways);
+    int **fullyAssocTagArray = calloc(1, sizeof(int *));
+    initArray(fullyAssocTagArray, 1, sets*ways);
+    
+    //if miss in real world cache, check full associativity
+    
+    
 
 //Used to test if init worked
 //    i=0;
-//    int j=0;
 //    int count = 0;
 //    
 //    for(i=0; i<sets; i++)
@@ -212,13 +235,13 @@ int main(int argc, char* argv[])
     }
     printf("File %s has %d lines\n", filename, numLines);
 
+    traceAddress = calloc(numLines, sizeof(int) * numLines);
     
     //rewind to top
     rewind(fp);
     
     //Test values of tag[]
     //printArray(tagArray, sets, ways);
-
     
 /* TODO: Now we simulate the cache */
     
@@ -227,19 +250,103 @@ int main(int argc, char* argv[])
         
         fscanf(fp, "%c ", &storeLoad);
         fscanf(fp, "%x\n", &effectiveAddr);
+        traceAddress[i] = effectiveAddr;
         //printf("%i. %c, %x\n", i+1, storeLoad, effectiveAddr);
+        //printf("%i. %c, 0x%.8x\n", i+1, storeLoad, traceAddress[i]);
+
         
-        //get index and tag values
+        //get index and tag values for real world cache
         indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
         tagValue = getTagValue(effectiveAddr, bitsTag);
-//        printf("%i tagValue = %i\n", i+1, tagValue);
+        //printf("%i tagValue = %i\n", i+1, tagValue);
+        
+        /* ****************************
+         *
+         * simulate fullyAssociative
+         *
+         * **************************** */
+        
+        fullyTagValue = effectiveAddr;
+        fullyTagValue >>= bitsOffset;
+        
+        //find if duplicate exists
+        fullyDuplicate = duplicateinFully(i, effectiveAddr, fullyTagValue, traceAddress, bitsOffset);
+        //printf("%i. fullyDuplicate = %i\n", i, fullyDuplicate);
+        
+        for(column=0; column<(sets*ways); column++) {
+            
+            //if hit
+            if((fullyAssocValidArray[0][column] != 0) && (fullyAssocTagArray[0][column] == fullyTagValue)) {
+                
+                if(storeLoad == 's') {
+                    fullyAssocDirtyArray[0][column] = 1;
+                }
+                toReal = HIT;
+                break;
+                
+            } //else if compulsory
+            else if(fullyAssocValidArray[0][column] == 0) {
+                
+                fullyAssocTagArray[0][column] = fullyTagValue;
+                fullyAssocValidArray[0][column] = 1;
+                
+                if(storeLoad == 's') {
+                    fullyAssocDirtyArray[0][column] = 1;
+                } else {
+                    fullyAssocDirtyArray[0][column] = 0;
+                }
+                
+                if(fullyDuplicate == FALSE) {
+                    toReal = COMPULSORY;
+                    break;
+                }
+                
+            } //else if fully array didn't hit or compuslory miss, evict using fifo and check capacity miss?
+            else {
+                //dequeue
+                for(j=1; j < (sets*ways); j++) {
+                    //we don't touch the valid bit?
+                    fullyAssocTagArray[0][j-1] = fullyAssocTagArray[0][j];
+                    
+                }
+                
+                //set tag of last column equal to the fullyTagValue
+                fullyAssocTagArray[0][(sets*ways)-1] = fullyTagValue;
+                
+                if(storeLoad == 's') {
+                    fullyAssocDirtyArray[0][(sets*ways)-1] = 1;
+                } else {
+                    fullyAssocDirtyArray[0][(sets*ways)-1] = 0;
+                }
+                
+                if(fullyDuplicate == FALSE) {
+                    toReal = COMPULSORY;
+                } else {
+                    toReal = CAPACITY;
+                }
+                
+                break;
+            }
+            
+        } //end for simulate full associative array
+
+        printf("%i. toReal = %d\n", i+1, toReal);
+/* ****************************
+ *
+ * simulate real world cache
+ *
+ * **************************** */
+        
+        
+        
         
         //testing writing to file
-        fprintf(wp, "%c 0x%.8x\n", storeLoad, effectiveAddr);
+//        fprintf(wp, "%c 0x%.8x\n", storeLoad, effectiveAddr);
         
         
         
     } //end for
+    
     
     //close the files writing
     fclose(fp);
@@ -282,6 +389,20 @@ uint32_t getTagValue(uint32_t effectiveAddr, uint32_t bitsTag) {
     value1 >>= (32-bitsTag);
 
     return value1;
+}
+
+boolean duplicateinFully(int currentLine, uint32_t effectiveAddr, uint32_t fullyTagValue, uint32_t *traceAddress, uint32_t bitsOffset) {
+    
+    int j;
+    for(j=0; j<currentLine; j++) {
+        //if current fullyTagValue is equal to a fullyTagValue already read in, then there's a duplicate
+        if(fullyTagValue == ((uint32_t) traceAddress[j] >> bitsOffset)) {
+            return TRUE;
+//            printf("%i. fullyDuplicate = %d\n", j+1, fullyDuplicate);
+        }
+    }
+    
+    return FALSE;
 }
 
 void printArray(int ** array, uint32_t sets, uint32_t ways) {
