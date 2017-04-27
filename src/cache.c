@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
         
         /* ****************************
          *
-         * simulate fullyAssociative
+         * simulate fullyAssociative : get if it's a hit, or what type of miss
          *
          * **************************** */
         
@@ -339,7 +339,84 @@ int main(int argc, char* argv[])
         tagValue = getTagValue(effectiveAddr, bitsTag);
         //printf("%i tagValue = %i\n", i+1, tagValue);
         printf("%i. ", i+1);
-        simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses);
+//        simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses);
+        for(column=0; column < ways; column++) {
+            
+            //if hit
+            if ((validArray[indexValue][column] != 0) && (tagArray[indexValue][column] == tagValue)) {
+                
+                if (storeLoad == 's') {
+                    dirtyArray[indexValue][column] = 1;
+                } else {
+                    
+                }
+                printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
+                fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
+                totalHits++;
+            } //else if compulsory
+            else if(validArray[indexValue][column] == 0) {
+                totalMisses++;
+                read_xactions++;
+                //set to valid and insert into array
+                validArray[indexValue][column] = 1;
+                tagArray[indexValue][column] = tagValue;
+                
+                if(storeLoad == 's') {
+                    
+                    dirtyArray[indexValue][column] = 1;
+                    
+                } else {
+                    dirtyArray[indexValue][column] = 0;
+                }
+                
+                if(fullyDuplicate == FALSE) {
+                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+                }
+                
+            }
+            else { //conflict or capacity miss - need to evict using FIFO
+                totalMisses++;
+                read_xactions++;
+                
+                for(j=1; j < ways; j++) {
+                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
+                }
+                
+                //write back to main memory
+                if(dirtyArray[indexValue][ways-1] != 0) {
+                    write_xactions++; //write_xactions only for writeback
+                }
+                
+                //then set the tag value
+                tagArray[indexValue][ways-1] = tagValue;
+                
+                if(storeLoad == 's') {
+                    dirtyArray[indexValue][ways-1] = 1;
+                } else {
+                    dirtyArray[indexValue][ways-1] = 0;
+                }
+                
+                
+                if(fullyDuplicate == TRUE) { //I have seen this address before
+                    if(toReal == CAPACITY) {
+                        printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
+                        fprintf(wp, "%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
+                    } else {
+                        printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
+                        fprintf(wp, "%c 0x%.8x conflict\n", storeLoad, effectiveAddr);
+                    }
+                } else {
+                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+                }
+                
+            }
+
+        }
+        
+        
+        
         
         
         
