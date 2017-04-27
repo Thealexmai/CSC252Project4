@@ -292,14 +292,7 @@ int main(int argc, char* argv[])
                 
                 
                 toReal = COMPULSORY;
-                printf("Hi\n");
                 break;
-                
-//                if(fullyDuplicate == FALSE) {
-//                    toReal = COMPULSORY;
-//                    break;
-//                }
-                
                 
                 
             } //else if fully array didn't hit or compuslory miss, evict using fifo and check capacity miss?
@@ -308,6 +301,8 @@ int main(int argc, char* argv[])
                 for(j=1; j < (sets*ways); j++) {
                     //we don't touch the valid bit?
                     fullyAssocTagArray[0][j-1] = fullyAssocTagArray[0][j];
+                    fullyAssocValidArray[0][j-1] = fullyAssocValidArray[0][j];
+                    fullyAssocDirtyArray[0][j-1] = fullyAssocDirtyArray[0][j-1];
                     
                 }
                 
@@ -323,9 +318,10 @@ int main(int argc, char* argv[])
                 if(fullyDuplicate == FALSE) {
                     toReal = COMPULSORY;
                 } else {
-                    toReal = CAPACITY;
+                    toReal = CAPACITY; //fully associative CANNOT have conflict misses
                 }
                 
+
                 break;
             }
             
@@ -358,6 +354,8 @@ int main(int argc, char* argv[])
                 printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
                 fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
                 totalHits++;
+                break;
+                
             } //else if compulsory
             else if(validArray[indexValue][column] == 0) {
                 totalMisses++;
@@ -379,22 +377,29 @@ int main(int argc, char* argv[])
                     fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                 }
                 
+                break;
+                
             }
             else { //conflict or capacity miss - need to evict using FIFO
                 totalMisses++;
                 read_xactions++;
                 
-                for(j=1; j < ways; j++) {
-                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
-                }
                 
                 //write back to main memory
                 if(dirtyArray[indexValue][ways-1] != 0) {
                     write_xactions++; //write_xactions only for writeback
                 }
                 
-                //then set the tag value
+                //dequeue
+                for(j=1; j < ways; j++) {
+                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
+                    validArray[indexValue][j-1] = validArray[indexValue][j];
+                    dirtyArray[indexValue][j-1] = dirtyArray[indexValue][j];
+                }
+                
+                //then set the tag value and valid to be true
                 tagArray[indexValue][ways-1] = tagValue;
+                validArray[indexValue][ways-1] = 1;
                 
                 if(storeLoad == 's') {
                     dirtyArray[indexValue][ways-1] = 1;
@@ -403,7 +408,7 @@ int main(int argc, char* argv[])
                 }
                 
                 //If it's a miss in the real world, and fully associative is a hit, then it's a conflict
-                //if toReal is hit then do something
+                //if toReal is hit then do conflict
                 if(fullyDuplicate == TRUE) { //I have seen this address before
                     if(toReal == CAPACITY) {
                         printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
@@ -416,6 +421,8 @@ int main(int argc, char* argv[])
                     printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                     fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                 }
+                
+                break;
                 
             }
 
