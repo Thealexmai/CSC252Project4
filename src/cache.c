@@ -2,9 +2,8 @@
 #include "cache.h"
 #include "trace.h"
 
-typedef enum {
-    HIT, COMPULSORY, CONFLICT, CAPACITY
-}fullyMiss_t;
+// Help on capacity miss: http://stackoverflow.com/questions/33314115/whats-the-difference-between-conflict-miss-and-capacity-miss
+
 
 int write_xactions = 0; //for that's write-back policy
 int read_xactions = 0;
@@ -255,11 +254,6 @@ int main(int argc, char* argv[])
         //printf("%i. %c, 0x%.8x\n", i+1, storeLoad, traceAddress[i]);
 
         
-        //get index and tag values for real world cache
-        indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
-        tagValue = getTagValue(effectiveAddr, bitsTag);
-        //printf("%i tagValue = %i\n", i+1, tagValue);
-        
         /* ****************************
          *
          * simulate fullyAssociative
@@ -301,6 +295,8 @@ int main(int argc, char* argv[])
                     break;
                 }
                 
+                printf("Hi\n");
+                
             } //else if fully array didn't hit or compuslory miss, evict using fifo and check capacity miss?
             else {
                 //dequeue
@@ -330,13 +326,20 @@ int main(int argc, char* argv[])
             
         } //end for simulate full associative array
 
-        printf("%i. toReal = %d\n", i+1, toReal);
-/* ****************************
- *
- * simulate real world cache
- *
- * **************************** */
+        //printf("%i. toReal = %d\n", i+1, toReal);
         
+        /* ****************************
+         *
+         * simulate real world cache
+         *
+         * **************************** */
+        
+        //get index and tag values for real world cache
+        indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
+        tagValue = getTagValue(effectiveAddr, bitsTag);
+        //printf("%i tagValue = %i\n", i+1, tagValue);
+        printf("%i. ", i+1);
+        simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses);
         
         
         
@@ -412,4 +415,87 @@ void printArray(int ** array, uint32_t sets, uint32_t ways) {
             printf("ArrayName[%i][%i] = %d\n ", i, j, array[i][j]);
 }
 
+void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, uint32_t tagValue, uint32_t ways, int ** validArray, int ** tagArray, int ** dirtyArray, boolean fullyDuplicate, fullyMiss_t toReal, int *totalHits, int *totalMisses) {
+    
+    int column;
+    
+    for(column=0; column < ways; column++) {
+        
+        //if hit
+        if ((validArray[indexValue][column] != 0) && (tagArray[indexValue][column] == tagValue)) {
+            
+            if (storeLoad == 's') {
+                dirtyArray[indexValue][column] = 1;
+            } else {
+                break;
+            }
+            printf("%c 0x%.8x Hit\n", storeLoad, effectiveAddr);
+            *totalHits++;
+            return;
+        } //else if compulsory
+     
+    }
+    
+    //then we missed
+    *totalMisses++;
+    
+    for(column=0; column < ways; column++) {
+        //compulsory miss
+        if(validArray[indexValue][column] == 0) {
+
+            read_xactions++;
+            //set to valid and insert into array
+            validArray[indexValue][column] = 1;
+            tagArray[indexValue][column] = tagValue;
+            
+            if(storeLoad == 's') {
+                
+                dirtyArray[indexValue][column] = 1;
+            
+            } else {
+                dirtyArray[indexValue][column] = 0;
+                break;
+            }
+            
+            if(fullyDuplicate == FALSE) {
+                printf("%c 0x%.8x Compulsory\n", storeLoad, effectiveAddr);
+                return;
+            }
+        }
+        
+    }
+    
+    //by this time, we need to FIFO and check if capacity or conflict miss
+    for(column=1; column < ways; column++) {
+        tagArray[indexValue][column-1] = tagArray[indexValue][column];
+    }
+    
+    tagArray[indexValue][ways-1] = tagValue;
+    
+    if(dirtyArray[indexValue][ways-1] != 0) {
+        write_xactions++;
+    }
+    
+    read_xactions++;
+    
+    if(storeLoad == 's') {
+        dirtyArray[indexValue][ways-1] = 1;
+    } else {
+        dirtyArray[indexValue][ways-1] = 0;
+    }
+    
+    if(fullyDuplicate == FALSE) {
+        printf("%c 0x%.8x Compulsory\n", storeLoad, effectiveAddr);
+        return;
+    }
+    
+    if(toReal == CAPACITY) {
+        printf("%c 0x%.8x Capacity\n", storeLoad, effectiveAddr);
+    } else {
+        printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
+    }
+    
+    return;
+    
+}
 
