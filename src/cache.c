@@ -429,9 +429,7 @@ int main(int argc, char* argv[])
                     printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                     fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                 }
-                
-                break;
-                
+                                
             }
 
         } //end for loop simulation of real world
