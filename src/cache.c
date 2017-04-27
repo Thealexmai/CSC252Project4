@@ -290,12 +290,17 @@ int main(int argc, char* argv[])
                     fullyAssocDirtyArray[0][column] = 0;
                 }
                 
-                if(fullyDuplicate == FALSE) {
-                    toReal = COMPULSORY;
-                    break;
-                }
                 
+                toReal = COMPULSORY;
                 printf("Hi\n");
+                break;
+                
+//                if(fullyDuplicate == FALSE) {
+//                    toReal = COMPULSORY;
+//                    break;
+//                }
+                
+                
                 
             } //else if fully array didn't hit or compuslory miss, evict using fifo and check capacity miss?
             else {
@@ -397,7 +402,8 @@ int main(int argc, char* argv[])
                     dirtyArray[indexValue][ways-1] = 0;
                 }
                 
-                
+                //If it's a miss in the real world, and fully associative is a hit, then it's a conflict
+                //if toReal is hit then do something
                 if(fullyDuplicate == TRUE) { //I have seen this address before
                     if(toReal == CAPACITY) {
                         printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
@@ -413,7 +419,7 @@ int main(int argc, char* argv[])
                 
             }
 
-        }
+        } //end for loop simulation of real world
         
         
         
