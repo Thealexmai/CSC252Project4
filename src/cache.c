@@ -269,6 +269,8 @@ int main(int argc, char* argv[])
         
         for(column=0; column<(sets*ways); column++) {
             
+            printf("%i. ", i+1);
+            
             //if hit
             if((fullyAssocValidArray[0][column] != 0) && (fullyAssocTagArray[0][column] == fullyTagValue)) {
                 
@@ -276,6 +278,7 @@ int main(int argc, char* argv[])
                     fullyAssocDirtyArray[0][column] = 1;
                 }
                 toReal = HIT;
+                printf("if ran on column = %i ", column);
                 break;
                 
             } //else if compulsory
@@ -292,6 +295,7 @@ int main(int argc, char* argv[])
                 
                 
                 toReal = COMPULSORY;
+                printf("else if compulsory on column = %i ", column);
                 break;
                 
                 
@@ -321,13 +325,14 @@ int main(int argc, char* argv[])
                     toReal = CAPACITY; //fully associative CANNOT have conflict misses
                 }
                 
+                printf("else ran on column = %i ", column);
 
                 break;
             }
             
         } //end for simulate full associative array
 
-        //printf("%i. toReal = %d\n", i+1, toReal);
+        printf("fullyTagValue = %i, toReal = %d\n", fullyTagValue, toReal);
         
         /* ****************************
          *
@@ -339,94 +344,95 @@ int main(int argc, char* argv[])
         indexValue = getIndexValue(effectiveAddr, bitsTag, bitsIndex, bitsOffset);
         tagValue = getTagValue(effectiveAddr, bitsTag);
         //printf("%i tagValue = %i\n", i+1, tagValue);
-        printf("%i. ", i+1);
-//        simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses);
-        for(column=0; column < ways; column++) {
-            
-            //if hit
-            if ((validArray[indexValue][column] != 0) && (tagArray[indexValue][column] == tagValue)) {
-                
-                if (storeLoad == 's') {
-                    dirtyArray[indexValue][column] = 1;
-                } else {
-                    
-                }
-                printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
-                fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
-                totalHits++;
-                break;
-                
-            } //else if compulsory
-            else if(validArray[indexValue][column] == 0) {
-                totalMisses++;
-                read_xactions++;
-                //set to valid and insert into array
-                validArray[indexValue][column] = 1;
-                tagArray[indexValue][column] = tagValue;
-                
-                if(storeLoad == 's') {
-                    
-                    dirtyArray[indexValue][column] = 1;
-                    
-                } else {
-                    dirtyArray[indexValue][column] = 0;
-                }
-                
-                if(fullyDuplicate == FALSE) {
-                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-                }
-                
-                break;
-                
-            }
-            else { //conflict or capacity miss - need to evict using FIFO
-                totalMisses++;
-                read_xactions++;
-                
-                
-                //write back to main memory
-                if(dirtyArray[indexValue][ways-1] != 0) {
-                    write_xactions++; //write_xactions only for writeback
-                }
-                
-                //dequeue
-                for(j=1; j < ways; j++) {
-                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
-                    validArray[indexValue][j-1] = validArray[indexValue][j];
-                    dirtyArray[indexValue][j-1] = dirtyArray[indexValue][j];
-                }
-                
-                //then set the tag value and valid to be true
-                tagArray[indexValue][ways-1] = tagValue;
-                validArray[indexValue][ways-1] = 1;
-                
-                if(storeLoad == 's') {
-                    dirtyArray[indexValue][ways-1] = 1;
-                } else {
-                    dirtyArray[indexValue][ways-1] = 0;
-                }
-                
-                //If it's a miss in the real world, and fully associative is a hit, then it's a conflict
-                //if toReal is hit then do conflict
-                if(fullyDuplicate == TRUE) { //I have seen this address before
-                    if(toReal == CAPACITY) {
-                        printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
-                        fprintf(wp, "%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
-                    } else {
-                        printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
-                        fprintf(wp, "%c 0x%.8x conflict\n", storeLoad, effectiveAddr);
-                    }
-                } else {
-                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-                }
-                
-                break;
-                
-            }
-
-        } //end for loop simulation of real world
+        
+//        printf("%i. ", i+1);
+////        simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses);
+//        for(column=0; column < ways; column++) {
+//            
+//            //if hit
+//            if ((validArray[indexValue][column] != 0) && (tagArray[indexValue][column] == tagValue)) {
+//                
+//                if (storeLoad == 's') {
+//                    dirtyArray[indexValue][column] = 1;
+//                } else {
+//                    
+//                }
+//                printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
+//                fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
+//                totalHits++;
+//                break;
+//                
+//            } //else if compulsory
+//            else if(validArray[indexValue][column] == 0) {
+//                totalMisses++;
+//                read_xactions++;
+//                //set to valid and insert into array
+//                validArray[indexValue][column] = 1;
+//                tagArray[indexValue][column] = tagValue;
+//                
+//                if(storeLoad == 's') {
+//                    
+//                    dirtyArray[indexValue][column] = 1;
+//                    
+//                } else {
+//                    dirtyArray[indexValue][column] = 0;
+//                }
+//                
+//                if(fullyDuplicate == FALSE) {
+//                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+//                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+//                }
+//                
+//                break;
+//                
+//            }
+//            else { //conflict or capacity miss - need to evict using FIFO
+//                totalMisses++;
+//                read_xactions++;
+//                
+//                
+//                //write back to main memory
+//                if(dirtyArray[indexValue][ways-1] != 0) {
+//                    write_xactions++; //write_xactions only for writeback
+//                }
+//                
+//                //dequeue
+//                for(j=1; j < ways; j++) {
+//                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
+//                    validArray[indexValue][j-1] = validArray[indexValue][j];
+//                    dirtyArray[indexValue][j-1] = dirtyArray[indexValue][j];
+//                }
+//                
+//                //then set the tag value and valid to be true
+//                tagArray[indexValue][ways-1] = tagValue;
+//                validArray[indexValue][ways-1] = 1;
+//                
+//                if(storeLoad == 's') {
+//                    dirtyArray[indexValue][ways-1] = 1;
+//                } else {
+//                    dirtyArray[indexValue][ways-1] = 0;
+//                }
+//                
+//                //If it's a miss in the real world, and fully associative is a hit, then it's a conflict
+//                //if toReal is hit then do conflict
+//                if(fullyDuplicate == TRUE) { //I have seen this address before
+//                    if(toReal == CAPACITY) {
+//                        printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
+//                        fprintf(wp, "%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
+//                    } else {
+//                        printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
+//                        fprintf(wp, "%c 0x%.8x conflict\n", storeLoad, effectiveAddr);
+//                    }
+//                } else {
+//                    printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+//                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
+//                }
+//                
+//                break;
+//                
+//            }
+//
+//        } //end for loop simulation of real world
         
         
         
