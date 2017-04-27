@@ -22,5 +22,5 @@ uint32_t getIndexValue(uint32_t effectiveAddr, uint32_t bitsTag, uint32_t bitsIn
 uint32_t getTagValue(uint32_t effectiveAddr, uint32_t bitsTag);
 boolean duplicateinFully(int currentLine, uint32_t effectiveAddr, uint32_t fullyTagValue, uint32_t * traceAddress, uint32_t bitsOffset);
 void printArray(int ** array, uint32_t sets, uint32_t ways);
-void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, uint32_t tagValue, uint32_t ways, int ** validArray, int ** tagArray, int ** dirtyArray, boolean fullyDuplicate, fullyMiss_t toReal, int *totalHits, int *totalMisses);
+void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, uint32_t tagValue, uint32_t ways, int ** validArray, int ** tagArray, int ** dirtyArray, boolean fullyDuplicate, fullyMiss_t toReal, int *totalHits, int *totalMisses, FILE *wp);
 fullyMiss_t simFullyAssoc(char storeLoad, uint32_t fullyTagValue, uint32_t ways, uint32_t sets, int ** fullyAssocValidArray, int ** fullyAssocTagArray, int ** fullyAssocDirtyArray, boolean fullyDuplicate);
