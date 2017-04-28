@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
             numLines++;
         }
     }
-    printf("File %s has %d lines\n", filename, numLines);
+    //printf("File %s has %d lines\n", filename, numLines);
 
     traceAddress = calloc(numLines, sizeof(int) * numLines);
     
@@ -269,70 +269,6 @@ int main(int argc, char* argv[])
         
         toReal = simFullyAssoc(storeLoad, fullyTagValue, ways, sets, fullyAssocValidArray, fullyAssocTagArray, fullyAssocDirtyArray,  fullyDuplicate);
         
-//        for(column=0; column<(sets*ways); column++) {
-//            
-//            printf("%i. ", i+1);
-//            
-//            //if hit
-//            if((fullyAssocValidArray[0][column] != 0) && (fullyAssocTagArray[0][column] == fullyTagValue)) {
-//                
-//                if(storeLoad == 's') {
-//                    fullyAssocDirtyArray[0][column] = 1;
-//                }
-//                toReal = HIT;
-//                printf("if ran on column = %i ", column);
-//                break;
-//                
-//            } //else if compulsory
-//            else if(fullyAssocValidArray[0][column] == 0) {
-//                
-//                fullyAssocTagArray[0][column] = fullyTagValue;
-//                fullyAssocValidArray[0][column] = 1;
-//                
-//                if(storeLoad == 's') {
-//                    fullyAssocDirtyArray[0][column] = 1;
-//                } else {
-//                    fullyAssocDirtyArray[0][column] = 0;
-//                }
-//                
-//                
-//                toReal = COMPULSORY;
-//                printf("else if compulsory on column = %i ", column);
-//                break;
-//                
-//                
-//            } //else if fully array didn't hit or compuslory miss, evict using fifo and check capacity miss?
-//            else {
-//                //dequeue
-//                for(j=1; j < (sets*ways); j++) {
-//                    //we don't touch the valid bit?
-//                    fullyAssocTagArray[0][j-1] = fullyAssocTagArray[0][j];
-//                    fullyAssocValidArray[0][j-1] = fullyAssocValidArray[0][j];
-//                    fullyAssocDirtyArray[0][j-1] = fullyAssocDirtyArray[0][j-1];
-//                    
-//                }
-//                
-//                //set tag of last column equal to the fullyTagValue
-//                fullyAssocTagArray[0][(sets*ways)-1] = fullyTagValue;
-//                
-//                if(storeLoad == 's') {
-//                    fullyAssocDirtyArray[0][(sets*ways)-1] = 1;
-//                } else {
-//                    fullyAssocDirtyArray[0][(sets*ways)-1] = 0;
-//                }
-//                
-//                if(fullyDuplicate == FALSE) {
-//                    toReal = COMPULSORY;
-//                } else {
-//                    toReal = CAPACITY; //fully associative CANNOT have conflict misses
-//                }
-//                
-//                printf("else ran on column = %i ", column);
-//
-//                break;
-//            }
-//            
-//        } //end for simulate full associative array
 
         //printf("fullyTagValue = %i, toReal = %d\n", fullyTagValue, toReal);
         
@@ -347,18 +283,13 @@ int main(int argc, char* argv[])
         tagValue = getTagValue(effectiveAddr, bitsTag);
         //printf("tagValue = %i\n", tagValue);
         
-        printf("%i. ", i+1);
+        //printf("%i. ", i+1);
         simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses, wp);
         
 
         
-        printf("tagValue = %i\n", tagValue);
+        //printf("tagValue = %i\n", tagValue);
         
-        
-        
-        
-        //testing writing to file
-//        fprintf(wp, "%c 0x%.8x\n", storeLoad, effectiveAddr);
         
         
         
@@ -443,7 +374,7 @@ void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, u
                 
             }
             
-            printf("if ran on [%i][%i] ", indexValue, column);
+            //printf("if ran on [%i][%i] ", indexValue, column);
             //printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
             fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
             *totalHits += 1;
@@ -473,7 +404,7 @@ void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, u
             }
             
             if(fullyDuplicate == FALSE) {
-                printf("else if ran on [%i][%i] ", indexValue, column);
+                //printf("else if ran on [%i][%i] ", indexValue, column);
                 //printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                 fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
                 return;
@@ -515,16 +446,16 @@ void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, u
     //if toReal is hit then do conflict
     if(fullyDuplicate == TRUE) { //I have seen this address before
         if(toReal == CAPACITY) {
-            printf("else capacity ran on [%i][%i] ", indexValue, column);
+            //printf("else capacity ran on [%i][%i] ", indexValue, column);
             //printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
             fprintf(wp, "%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
         } else {
-            printf("else conflict ran on [%i][%i] ", indexValue, column);
+            //printf("else conflict ran on [%i][%i] ", indexValue, column);
             //printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
             fprintf(wp, "%c 0x%.8x conflict\n", storeLoad, effectiveAddr);
         }
     } else {
-        printf("else compulsory ran on [%i][%i] ", indexValue, column);
+        //printf("else compulsory ran on [%i][%i] ", indexValue, column);
         //printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
         fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
     }
