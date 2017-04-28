@@ -350,96 +350,7 @@ int main(int argc, char* argv[])
         printf("%i. ", i+1);
         simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses, wp);
         
-//        for(column=0; column < ways; column++) {
-//            
-//            //if hit
-//            if ((validArray[indexValue][column] != 0) && (tagArray[indexValue][column] == tagValue)) {
-//                
-//                if (storeLoad == 's') {
-//                    dirtyArray[indexValue][column] = 1;
-//                } else {
-//                    
-//                }
-//                
-//                printf("if ran on [%i][%i] ", indexValue, column);
-//                //printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
-//                fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
-//                totalHits++;
-//                break;
-//                
-//            } //else if compulsory
-//            else if(validArray[indexValue][column] == 0) {
-//                totalMisses++;
-//                read_xactions++;
-//                //set to valid and insert into array
-//                validArray[indexValue][column] = 1;
-//                tagArray[indexValue][column] = tagValue;
-//                
-//                if(storeLoad == 's') {
-//                    
-//                    dirtyArray[indexValue][column] = 1;
-//                    
-//                } else {
-//                    dirtyArray[indexValue][column] = 0;
-//                }
-//                
-//                if(fullyDuplicate == FALSE) {
-//                    printf("else if ran on [%i][%i] ", indexValue, column);
-//                    //printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-//                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-//                }
-//                
-//                break;
-//                
-//            }
-//            else { //conflict or capacity miss - need to evict using FIFO
-//                totalMisses++;
-//                read_xactions++;
-//                
-//                
-//                //write back to main memory
-//                if(dirtyArray[indexValue][ways-1] != 0) {
-//                    write_xactions++; //write_xactions only for writeback
-//                }
-//                
-//                //dequeue
-//                for(j=1; j < ways; j++) {
-//                    tagArray[indexValue][j-1] = tagArray[indexValue][j];
-//                    validArray[indexValue][j-1] = validArray[indexValue][j];
-//                    dirtyArray[indexValue][j-1] = dirtyArray[indexValue][j];
-//                }
-//                
-//                //then set the tag value and valid to be true
-//                tagArray[indexValue][ways-1] = tagValue;
-//                validArray[indexValue][ways-1] = 1;
-//                
-//                if(storeLoad == 's') {
-//                    dirtyArray[indexValue][ways-1] = 1;
-//                } else {
-//                    dirtyArray[indexValue][ways-1] = 0;
-//                }
-//                
-//                //If it's a miss in the real world, and fully associative is a hit, then it's a conflict
-//                //if toReal is hit then do conflict
-//                if(fullyDuplicate == TRUE) { //I have seen this address before
-//                    if(toReal == CAPACITY) {
-//                        printf("else capacity ran on [%i][%i] ", indexValue, column);
-//                        //printf("%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
-//                        fprintf(wp, "%c 0x%.8x capacity\n", storeLoad, effectiveAddr);
-//                    } else {
-//                        printf("else conflict ran on [%i][%i] ", indexValue, column);
-//                        //printf("%c 0x%.8x Conflict\n", storeLoad, effectiveAddr);
-//                        fprintf(wp, "%c 0x%.8x conflict\n", storeLoad, effectiveAddr);
-//                    }
-//                } else {
-//                    printf("else compulsory ran on [%i][%i] ", indexValue, column);
-//                    //printf("%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-//                    fprintf(wp, "%c 0x%.8x compulsory\n", storeLoad, effectiveAddr);
-//                }
-//                
-//            }
-//
-//        } //end for loop simulation of real world
+
         
         printf("tagValue = %i\n", tagValue);
         
@@ -535,13 +446,13 @@ void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, u
             printf("if ran on [%i][%i] ", indexValue, column);
             //printf("%c 0x%.8x hit\n", storeLoad, effectiveAddr);
             fprintf(wp, "%c 0x%.8x hit\n", storeLoad, effectiveAddr);
-            *totalHits++;
+            *totalHits += 1;
             return;
         }
     }
     
     //if not hit, then miss
-    *totalMisses++;
+    *totalMisses += 1;
     
     //else if compulsory
     for(column=0; column < ways; column++) {
