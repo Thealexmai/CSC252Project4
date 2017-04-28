@@ -178,9 +178,6 @@ int main(int argc, char* argv[])
     initArray(tagArray, sets, ways);
     initArray(dirtyArray, sets, ways);
     
-    //keeping tack of addresses - tag and index to see if we accessed it before
-    int **addressTrack = calloc(sets, sizeof(int *) * sets);
-    initArray(addressTrack, sets, ways);
     
     //fullyAssocArrays are only one row and #columns
     int **fullyAssocValidArray = calloc(1, sizeof(int *));
@@ -234,6 +231,7 @@ int main(int argc, char* argv[])
     }
     //printf("File %s has %d lines\n", filename, numLines);
 
+    //keeping tack of addresses - tag and index to see if we accessed it before
     traceAddress = calloc(numLines, sizeof(int) * numLines);
     
     //rewind to top
@@ -286,12 +284,8 @@ int main(int argc, char* argv[])
         //printf("%i. ", i+1);
         simRealWorld(storeLoad, effectiveAddr, indexValue, tagValue, ways, validArray, tagArray, dirtyArray, fullyDuplicate, toReal, &totalHits, &totalMisses, wp);
         
-
         
         //printf("tagValue = %i\n", tagValue);
-        
-        
-        
         
     } //end for
     
@@ -304,10 +298,7 @@ int main(int argc, char* argv[])
   printf("Miss Rate: %8lf%%\n", ((double) totalMisses) / ((double) totalMisses + (double) totalHits) * 100.0);
   printf("Read Transactions: %d\n", read_xactions);
   printf("Write Transactions: %d\n", write_xactions);
-
-  /* TODO: Now we output the file */
-
-  /* TODO: Cleanup */
+  
 }
 
 void initArray(int **array, uint32_t sets, uint32_t ways) {
@@ -370,8 +361,6 @@ void simRealWorld(char storeLoad, uint32_t effectiveAddr, uint32_t indexValue, u
             
             if (storeLoad == 's') {
                 dirtyArray[indexValue][column] = 1;
-            } else {
-                
             }
             
             //printf("if ran on [%i][%i] ", indexValue, column);
